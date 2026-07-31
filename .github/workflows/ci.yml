@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -10,106 +10,40 @@ permissions:
   contents: read
   packages: write
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
   lint:
-    name: Линтинг и проверка кода
+    name: Линтинг
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Установка flake8
-        run: |
-          pip install flake8
-
-      - name: Flake8 (проверка стиля)
-        run: |
-          flake8 app/ --count --max-complexity=10 --statistics --ignore=E501,W293,E302,E305,E225,E231,W291,E265,E211,C901,E128,E127,F401,F841
+        run: pip install flake8
+      - name: Flake8
+        run: flake8 app/ --count --max-complexity=10 --statistics --ignore=E501,W293,E302,E305,E225,E231,W291,E265,E211,C901,E128,E127,F401,F841
 
   build:
-    name: Сборка Docker образов
+    name: Сборка образов
     runs-on: ubuntu-latest
     needs: lint
-
     strategy:
       matrix:
         service: [collector, parser, archiver]
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push ${{ matrix.service }}
-        uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v5
         with:
           context: .
           file: app/${{ matrix.service }}/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy:
-    name: Деплой в Kind
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Kind
-        run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
-          chmod +x ./kind
-          sudo mv ./kind /usr/local/bin/kind
-
-      - name: Install kubectl
-        run: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-
-      - name: Создание Kind кластера
-        run: |
-          kind create cluster --config kind-config.yaml --name log-pipeline
-
-      - name: Загрузка образов из реестра
-        run: |
-          kind load docker-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/collector:${{ github.sha }} --name log-pipeline
-          kind load docker-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/parser:${{ github.sha }} --name log-pipeline
-          kind load docker-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/archiver:${{ github.sha }} --name log-pipeline
-
-      - name: Деплой приложений
-        run: |
-          make deploy-all
-          kubectl wait --for=condition=ready pod -l app=collector -n log-pipeline --timeout=60s
-          kubectl wait --for=condition=ready pod -l app=parser -n log-pipeline --timeout=60s
-          kubectl wait --for=condition=ready pod -l app=archiver -n log-pipeline --timeout=60s
-
-      - name: Статус подов
-        run: |
-          kubectl get pods -n log-pipeline
+            ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest
+            ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ github.sha }}
