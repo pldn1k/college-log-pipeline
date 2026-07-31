@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector
+  namespace: log-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collector
+  template:
+    metadata:
+      labels:
+        app: collector
+    spec:
+      containers:
+      - name: collector
+        image: log-collector:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BOOTSTRAP
+          value: "kafka:9092"
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: KAFKA_TOPIC
+        - name: COLLECT_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: COLLECT_INTERVAL
+        - name: USE_EMULATOR
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: USE_EMULATOR
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: LOG_LEVEL
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

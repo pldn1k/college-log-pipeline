@@ -1,0 +1,4 @@
+[flake8]
+ignore = E501, W293, E302, E305, E225, E231, W291, E265, E211, C901, E128, E127, F401, F841
+max-complexity = 20
+exclude = venv, .git, __pycache__, app/collector/winrm_client.py

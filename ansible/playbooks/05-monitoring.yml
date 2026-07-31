@@ -1,0 +1,27 @@
+---
+- name: Проверка мониторинга
+  hosts: localhost
+  connection: local
+  become: no
+  vars:
+    k8s_monitoring_namespace: monitoring
+  tasks:
+    - name: Проверка Grafana
+      uri:
+        url: http://localhost:3000
+        status_code: 200
+      register: grafana_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Проверка подов мониторинга
+      command: kubectl get pods -n {{ k8s_monitoring_namespace }}
+      register: monitoring_pods
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Статус мониторинга
+      debug:
+        msg:
+          - "Grafana: {{ '✅ доступен' if grafana_check.status == 200 else '❌ не доступен' }}"
+          - "Поды в monitoring: {{ monitoring_pods.stdout_lines if monitoring_pods.rc == 0 else '❌ неймспейс пуст' }}"

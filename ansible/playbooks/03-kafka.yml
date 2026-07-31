@@ -1,0 +1,30 @@
+---
+- name: Деплой Kafka в Kubernetes
+  hosts: localhost
+  connection: local
+  become: no
+  vars:
+    k8s_namespace: log-pipeline
+    project_root: /projects/college-log-pipeline
+  tasks:
+    - name: Создание namespace
+      command: kubectl create namespace {{ k8s_namespace }} --dry-run=client -o yaml | kubectl apply -f -
+      changed_when: true
+      ignore_errors: yes
+
+    - name: Деплой Zookeeper
+      command: kubectl apply -f {{ project_root }}/k8s/kafka/zookeeper.yaml
+      ignore_errors: yes
+
+    - name: Деплой Kafka
+      command: kubectl apply -f {{ project_root }}/k8s/kafka/kafka.yaml
+      ignore_errors: yes
+
+    - name: Проверка статуса подов Kafka
+      command: kubectl get pods -n {{ k8s_namespace }} -l app=kafka
+      register: kafka_pods
+      ignore_errors: yes
+
+    - name: Вывод статуса Kafka
+      debug:
+        msg: "{{ kafka_pods.stdout_lines if kafka_pods.rc == 0 else '❌ Kafka не запущена' }}"

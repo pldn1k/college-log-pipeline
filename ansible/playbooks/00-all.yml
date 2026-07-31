@@ -1,0 +1,18 @@
+---
+- name: Запуск 00-prepare
+  import_playbook: 00-prepare.yml
+
+- name: Запуск 01-docker
+  import_playbook: 01-docker.yml
+
+- name: Запуск 02-kind
+  import_playbook: 02-kind.yml
+
+- name: Запуск 03-kafka
+  import_playbook: 03-kafka.yml
+
+- name: Запуск 04-apps
+  import_playbook: 04-apps.yml
+
+- name: Запуск 05-monitoring
+  import_playbook: 05-monitoring.yml

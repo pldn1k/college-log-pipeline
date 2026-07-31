@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: parser-config
+  namespace: log-pipeline
+data:
+  INPUT_TOPIC: "raw-logs"
+  OUTPUT_TOPIC: "processed-logs"
+  ERROR_TOPIC: "error-logs"
+  GROUP_ID: "log-parser-group"
+  ALERT_TYPE: "log"
+  LOG_LEVEL: "INFO"

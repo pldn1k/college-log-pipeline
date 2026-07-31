@@ -1,0 +1,46 @@
+---
+- name: Развертывание Kind кластера
+  hosts: localhost
+  connection: local
+  become: no
+  vars:
+    project_root: /projects/college-log-pipeline
+  tasks:
+    - name: Проверка Kind
+      command: kind --version
+      register: kind_version
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Вывод версии Kind
+      debug:
+        msg: "Kind: {{ kind_version.stdout if kind_version.rc == 0 else '❌ не установлен' }}"
+
+    - name: Проверка существования кластера
+      command: kind get clusters
+      register: kind_clusters
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Вывод существующих кластеров
+      debug:
+        msg: "Существующие кластеры: {{ kind_clusters.stdout if kind_clusters.rc == 0 else '❌ кластеров нет' }}"
+
+    - name: Создание кластера (если не существует)
+      command: kind create cluster --config {{ project_root }}/kind-config.yaml
+      when: "'kind' not in kind_clusters.stdout"
+      register: kind_create
+
+    - name: Результат создания кластера
+      debug:
+        msg: "{{ kind_create.stdout if kind_create.changed else 'Кластер уже существует' }}"
+
+    - name: Проверка kubectl
+      command: kubectl version --client
+      register: kubectl_version
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Вывод версии kubectl
+      debug:
+        msg: "kubectl: {{ kubectl_version.stdout if kubectl_version.rc == 0 else '❌ не установлен' }}"

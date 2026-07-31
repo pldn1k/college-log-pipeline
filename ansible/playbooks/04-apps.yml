@@ -1,0 +1,53 @@
+---
+- name: Деплой приложений
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    project_root: /projects/college-log-pipeline
+
+  tasks:
+    - name: Деплой namespace (если не создан)
+      shell: |
+        kubectl create namespace log-pipeline --dry-run=client -o yaml | kubectl apply -f -
+      ignore_errors: yes
+
+    - name: Деплой ConfigMap коллектора
+      shell: |
+        kubectl apply -f {{ project_root }}/k8s/apps/collector-configmap.yaml
+      ignore_errors: yes
+
+    - name: Деплой коллектора
+      shell: |
+        kubectl apply -f {{ project_root }}/k8s/apps/collector-deployment.yaml
+      ignore_errors: yes
+
+    - name: Деплой ConfigMap парсера
+      shell: |
+        kubectl apply -f {{ project_root }}/k8s/apps/parser-configmap.yaml
+      ignore_errors: yes
+
+    - name: Деплой парсера
+      shell: |
+        kubectl apply -f {{ project_root }}/k8s/apps/parser-deployment.yaml
+      ignore_errors: yes
+
+    - name: Деплой архиватора
+      shell: |
+        kubectl apply -f {{ project_root }}/k8s/apps/archiver/
+      ignore_errors: yes
+
+    - name: Деплой MinIO
+      shell: |
+        kubectl apply -f {{ project_root }}/k8s/minio/
+      ignore_errors: yes
+
+    - name: Проверка статуса всех подов
+      shell: |
+        kubectl get pods -n log-pipeline
+      register: pods_status
+      ignore_errors: yes
+
+    - name: Вывод статуса подов
+      debug:
+        msg: "{{ pods_status.stdout_lines }}"

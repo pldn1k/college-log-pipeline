@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Docker
+*.log
+*.pid
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets
+.env
+*.env
+*.key
+*.pem
+*.crt
+
+# K8s
+*.lock
+k8s/secrets/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI
+*.test
+*.coverage

@@ -1,0 +1,45 @@
+---
+- name: Подготовка ОС для Kubernetes кластера
+  hosts: all
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Проверка наличия Docker
+      command: which docker
+      register: docker_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Проверка наличия curl
+      command: which curl
+      register: curl_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Проверка наличия kubectl
+      command: which kubectl
+      register: kubectl_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Проверка наличия kind
+      command: which kind
+      register: kind_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Проверка работоспособности Docker
+      command: docker ps
+      register: docker_ps_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Вывод результата проверки
+      debug:
+        msg:
+          - "Docker: {{ '✅ установлен' if docker_check.rc == 0 else '❌ не найден' }}"
+          - "Docker работает: {{ '✅ да' if docker_ps_check.rc == 0 else '❌ нет (запусти docker)' }}"
+          - "curl: {{ '✅ установлен' if curl_check.rc == 0 else '❌ не найден' }}"
+          - "kubectl: {{ '✅ установлен' if kubectl_check.rc == 0 else '❌ не найден' }}"
+          - "kind: {{ '✅ установлен' if kind_check.rc == 0 else '❌ не найден' }}"

@@ -1,0 +1,32 @@
+grafana:
+  adminPassword: admin
+  service:
+    type: NodePort
+    port: 80
+    nodePort: 30080
+  persistence:
+    enabled: true
+    size: 1Gi
+    
+prometheus:
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+
+# Сбор метрик с подов              
+kubelet:
+  serviceMonitor:
+    enable: true
+
+# Сбор метрик с API сервера    
+kubeApiServer:
+  serviceMonitor:
+    enable: true
+    
+kube-state-metrics:
+  enabled: false

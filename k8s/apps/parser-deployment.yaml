@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parser
+  namespace: log-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: parser
+  template:
+    metadata:
+      labels:
+        app: parser
+    spec:
+      containers:
+      - name: parser
+        image: log-parser:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BOOTSTRAP
+          value: "kafka:9092"
+        - name: INPUT_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: parser-config
+              key: INPUT_TOPIC
+        - name: OUTPUT_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: parser-config
+              key: OUTPUT_TOPIC
+        - name: ERROR_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: parser-config
+              key: ERROR_TOPIC
+        - name: GROUP_ID
+          valueFrom:
+            configMapKeyRef:
+              name: parser-config
+              key: GROUP_ID
+        - name: ALERT_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: parser-config
+              key: ALERT_TYPE
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: parser-config
+              key: LOG_LEVEL
+        - name: MAX_POLL_INTERVAL_MS
+          value: "600000"
+        - name: MAX_POLL_RECORDS
+          value: "10"
+        - name: SESSION_TIMEOUT_MS
+          value: "60000"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

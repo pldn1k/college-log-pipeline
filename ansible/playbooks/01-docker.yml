@@ -1,0 +1,15 @@
+---
+- name: Проверка Docker
+  hosts: localhost
+  connection: local
+  become: no
+  tasks:
+    - name: Проверка Docker
+      command: docker --version
+      register: docker_version
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Вывод версии Docker
+      debug:
+        msg: "Docker: {{ docker_version.stdout if docker_version.rc == 0 else '❌ не установлен' }}"

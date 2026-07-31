@@ -1,0 +1,17 @@
+# Общие переменные
+project_name: log-pipeline
+k8s_namespace: log-pipeline
+k8s_monitoring_namespace: monitoring
+
+# Пути
+project_root: /projects/college-log-pipeline
+k8s_manifests_dir: "{{ project_ root }}/k8s"
+
+# Версии
+kind_version: v0.20.0
+kubectl_version: v1.28.0
+helm_version: v3.12.0
+
+# Docker
+docker_edition: ce
+docker_package: docker-ce
