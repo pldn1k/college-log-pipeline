@@ -84,7 +84,7 @@ jobs:
     name: Деплой в Kind
     runs-on: ubuntu-latest
     needs: build
-    if: githun.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout
